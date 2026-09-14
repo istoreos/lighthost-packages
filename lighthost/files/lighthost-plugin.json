@@ -19,6 +19,7 @@
       "uci": { "type": "uci" }
     }
   },
+  "auth": { "mode": "passthrough" },
   "backend": {
     "type": "http",
     "transport": "unix",

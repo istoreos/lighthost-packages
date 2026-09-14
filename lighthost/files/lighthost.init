@@ -14,6 +14,12 @@ load_lighthost_config() {
 	config_get priv_socket "$1" priv_socket "$run_dir/priv.sock"
 	config_get storage_pool "$1" storage_pool "default"
 	config_get auth_mode "$1" auth_mode "openwrt"
+	config_get backup_repository "$1" backup_repository ""
+	config_get backup_repository_owner "$1" backup_repository_owner "lighthost"
+	config_get backup_repository_id "$1" backup_repository_id "00000000-0000-7000-8000-000000000901"
+	config_get docker_manager_socket "$1" docker_manager_socket "/var/run/dockermanager.sock"
+	config_get docker_manager_token_file "$1" docker_manager_token_file "/etc/lighthost/docker-manager.token"
+	config_get node_id "$1" node_id "local"
 }
 
 valid_data_dir() {
@@ -46,6 +52,24 @@ prepare_data() {
 	fi
 }
 
+prepare_docker_manager_token() {
+	[ -n "$docker_manager_token_file" ] || return 0
+	case "$docker_manager_token_file" in
+		/etc/lighthost/*) ;;
+		*)
+			logger -t lighthost "refusing unsafe docker_manager_token_file: $docker_manager_token_file"
+			return 1
+			;;
+	esac
+	mkdir -p "$(dirname "$docker_manager_token_file")" || return 1
+	if [ ! -s "$docker_manager_token_file" ]; then
+		umask 077
+		head -c 32 /dev/urandom | base64 > "$docker_manager_token_file" || return 1
+	fi
+	chown root:lighthost "$docker_manager_token_file" || return 1
+	chmod 640 "$docker_manager_token_file" || return 1
+}
+
 start_service() {
 	config_load lighthost
 	config_foreach load_lighthost_config lighthost
@@ -55,6 +79,7 @@ start_service() {
 		return 1
 	}
 	prepare_data || return 1
+	prepare_docker_manager_token || return 1
 	mkdir -p "$run_dir" || return 1
 	chown root:lighthost "$run_dir"
 	chmod 770 "$run_dir"
@@ -68,7 +93,9 @@ start_service() {
 		"LIGHTHOST_PRIV_SOCKET=$priv_socket" \
 		"LIGHTHOST_PRIV_EXPECTED_UID=$uid" \
 		"LIGHTHOST_PRIV_GROUP_ID=$gid" \
-		"LIGHTHOST_STORAGE_POOL=$storage_pool"
+		"LIGHTHOST_STORAGE_POOL=$storage_pool" \
+		"LIGHTHOST_BACKUP_REPOSITORY=$backup_repository" \
+		"LIGHTHOST_BACKUP_REPOSITORY_OWNER=$backup_repository_owner"
 	procd_set_param user root
 	procd_set_param respawn 3600 5 5
 	procd_set_param stdout 1
@@ -80,7 +107,13 @@ start_service() {
 	procd_set_param env \
 		"LIGHTHOST_CONTROL_DB=$data_dir/control/lighthost.db" \
 		"LIGHTHOST_HTTP_SOCKET=$http_socket" \
-		"LIGHTHOST_PRIV_SOCKET=$priv_socket"
+		"LIGHTHOST_PRIV_SOCKET=$priv_socket" \
+		"LIGHTHOST_BACKUP_REPOSITORY=$backup_repository" \
+		"LIGHTHOST_BACKUP_REPOSITORY_ID=$backup_repository_id"
+	[ -z "$docker_manager_token_file" ] || procd_append_param env \
+		"LIGHTHOST_DOCKER_MANAGER_SOCKET=$docker_manager_socket" \
+		"LIGHTHOST_DOCKER_MANAGER_TOKEN_FILE=$docker_manager_token_file" \
+		"LIGHTHOST_NODE_ID=$node_id"
 	procd_set_param user lighthost
 	procd_set_param group lighthost
 	procd_set_param respawn 3600 5 5
