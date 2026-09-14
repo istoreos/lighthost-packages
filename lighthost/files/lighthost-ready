@@ -1,0 +1,32 @@
+#!/bin/sh
+
+socket="$(uci -q get lighthost.@lighthost[0].http_socket)"
+[ -n "$socket" ] || socket=/var/run/lighthost/http.sock
+[ -S "$socket" ] || {
+	echo 'not ready: control socket is absent' >&2
+	exit 1
+}
+
+response="$(printf 'GET /apps/lighthost/api/v1/readyz HTTP/1.0\r\nHost: localhost\r\n\r\n' | \
+	socat -t 3 - UNIX-CONNECT:"$socket" 2>/dev/null)"
+printf '%s\n' "$response" | grep -q '"status":"ready"' || {
+	echo 'not ready: readiness endpoint failed' >&2
+	exit 1
+}
+
+priv_socket="$(uci -q get lighthost.@lighthost[0].priv_socket)"
+[ -n "$priv_socket" ] || priv_socket=/var/run/lighthost/priv.sock
+[ -S "$priv_socket" ] || {
+	echo 'not ready: privileged socket is absent' >&2
+	exit 1
+}
+[ -x /usr/bin/incus ] || {
+	echo 'not ready: Incus client is absent' >&2
+	exit 1
+}
+[ -d /sys/class/net/lighthost-lan/bridge ] || {
+	echo 'not ready: shared LAN bridge is absent' >&2
+	exit 1
+}
+
+echo ready

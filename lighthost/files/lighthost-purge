@@ -1,0 +1,34 @@
+#!/bin/sh
+
+set -eu
+
+[ "${1:-}" = --confirm-purge ] || {
+	echo 'usage: lighthost-purge --confirm-purge' >&2
+	exit 2
+}
+
+data_dir="$(uci -q get lighthost.@lighthost[0].data_dir || true)"
+case "$data_dir" in
+	/mnt/*/lighthost|/mnt/*/lighthost/*) ;;
+	*) echo 'refusing unsafe or unset data_dir' >&2; exit 2 ;;
+esac
+[ -f "$data_dir/.lighthost-managed" ] || {
+	echo 'refusing unmarked data_dir' >&2
+	exit 2
+}
+
+if [ -x /usr/bin/incus ] && [ -n "$(/usr/bin/incus list --format csv -c n 2>/dev/null)" ]; then
+	echo 'refusing purge: Incus still has instances' >&2
+	exit 3
+fi
+
+/etc/init.d/lighthost stop >/dev/null 2>&1 || true
+for alias in lighthost-ubuntu-24.04 lighthost-debian-12; do
+	/usr/bin/incus image alias delete "$alias" >/dev/null 2>&1 || true
+done
+
+ip link delete lh-lan-op >/dev/null 2>&1 || true
+ip link delete lighthost-lan >/dev/null 2>&1 || true
+rm -rf "$data_dir/control" "$data_dir/cache" "$data_dir/backups"
+rm -f "$data_dir/.lighthost-managed"
+echo 'LightHost control data and shared LAN were purged; the Incus runtime installation was preserved.'

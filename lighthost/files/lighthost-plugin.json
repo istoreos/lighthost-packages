@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "id": "lighthost",
+  "name": "LightHost",
+  "icon": "logo.svg",
+  "staticRoot": "/usr/share/lighthost/www",
+  "desktop": {
+    "mode": "module",
+    "entry": "desktop-entry.js",
+    "isolation": "shadow-dom"
+  },
+  "standalone": {
+    "entry": "index.html",
+    "basePath": "/apps/lighthost/"
+  },
+  "config": {
+    "providerOrder": ["uci"],
+    "providers": {
+      "uci": { "type": "uci" }
+    }
+  },
+  "backend": {
+    "type": "http",
+    "transport": "unix",
+    "scheme": "http",
+    "values": {
+      "socketPath": {
+        "default": "/var/run/lighthost/http.sock",
+        "keys": { "uci": "lighthost.@lighthost[0].http_socket" }
+      }
+    },
+    "upstreamBasePath": "/apps/lighthost/",
+    "apiPath": "api/",
+    "pathMode": "preserve"
+  },
+  "window": {
+    "width": 1180,
+    "height": 760,
+    "singleton": true
+  },
+  "capabilities": ["system-container", "incus"],
+  "categories": ["system", "development"]
+}
