@@ -32,6 +32,18 @@ define Package/incus/description
  runtime. This package intentionally excludes QEMU and VM helper binaries.
 endef
 
+define Package/incus-agent
+  SECTION:=admin
+  CATEGORY:=Administration
+  TITLE:=LightHost Incus virtual-machine guest agent
+  URL:=https://linuxcontainers.org/incus/
+endef
+
+define Package/incus-agent/description
+ Version-locked Incus agent injected into LightHost virtual machines. It is a
+ separate package so the system-container release does not gain VM helpers.
+endef
+
 INCUS_GO:=$(LIGHTHOST_GO_ROOT)/bin/go
 INCUS_GO_CACHE:=$(TMP_DIR)/go-build-incus-$(PKG_VERSION)
 
@@ -68,6 +80,14 @@ define Build/Compile
 		"$(INCUS_GO)" build -buildvcs=false -trimpath -tags libsqlite3 \
 			-ldflags "-X github.com/lxc/incus/v6/internal/version.Version=$(PKG_VERSION)-lighthost.$(PKG_RELEASE)" \
 			-o bin/incus ./cmd/incus
+	cd "$(PKG_BUILD_DIR)" && \
+		PATH="$(STAGING_DIR_HOST)/bin:$$$$PATH" \
+		GOOS=linux GOARCH=amd64 GOAMD64=v1 \
+		GOTOOLCHAIN=local GOPROXY=off GOSUMDB=off GOFLAGS=-mod=vendor \
+		GOCACHE="$(INCUS_GO_CACHE)" CGO_ENABLED=0 \
+		"$(INCUS_GO)" build -buildvcs=false -trimpath -tags agent,netgo \
+			-ldflags "-X github.com/lxc/incus/v6/internal/version.Version=$(PKG_VERSION)-lighthost.$(PKG_RELEASE)" \
+			-o bin/incus-agent ./cmd/incus-agent
 endef
 
 define Package/incus/install
@@ -76,4 +96,10 @@ define Package/incus/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bin/incusd $(1)/usr/sbin/incusd
 endef
 
+define Package/incus-agent/install
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bin/incus-agent $(1)/usr/bin/incus-agent
+endef
+
 $(eval $(call BuildPackage,incus))
+$(eval $(call BuildPackage,incus-agent))
