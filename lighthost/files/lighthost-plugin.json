@@ -32,7 +32,8 @@
     },
     "upstreamBasePath": "/apps/lighthost/",
     "apiPath": "api/",
-    "pathMode": "preserve"
+    "pathMode": "preserve",
+    "maxRequestBodyBytes": 1048576
   },
   "window": {
     "width": 1180,

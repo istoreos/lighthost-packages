@@ -17,9 +17,26 @@ load_lighthost_config() {
 	config_get backup_repository "$1" backup_repository ""
 	config_get backup_repository_owner "$1" backup_repository_owner "lighthost"
 	config_get backup_repository_id "$1" backup_repository_id "00000000-0000-7000-8000-000000000901"
+	config_get backup_repository_disk_serial "$1" backup_repository_disk_serial ""
+	config_get backup_repository_uuid "$1" backup_repository_uuid ""
 	config_get docker_manager_socket "$1" docker_manager_socket "/var/run/dockermanager.sock"
 	config_get docker_manager_token_file "$1" docker_manager_token_file "/etc/lighthost/docker-manager.token"
 	config_get node_id "$1" node_id "local"
+}
+
+resolve_backup_repository() {
+	backup_repository_configured="$backup_repository"
+	backup_repository_active=""
+	backup_repository_state="unavailable"
+	[ -n "$backup_repository_configured" ] || return 0
+	if resolved="$(/usr/sbin/lighthost-repository-resolve \
+		"$backup_repository_configured" "$backup_repository_owner" \
+		"$backup_repository_disk_serial" "$backup_repository_uuid" 2>/dev/null)"; then
+		backup_repository_active="$resolved"
+		backup_repository_state="available"
+	else
+		logger -t lighthost "backup repository unavailable or identity mismatch: $backup_repository_configured"
+	fi
 }
 
 valid_data_dir() {
@@ -34,10 +51,10 @@ prepare_data() {
 		logger -t lighthost "refusing unsafe data_dir: $data_dir"
 		return 1
 	}
-	mkdir -p "$data_dir/control" "$data_dir/cache" "$data_dir/backups" || return 1
+	mkdir -p "$data_dir/control" "$data_dir/cache" "$data_dir/backups" "$data_dir/support" || return 1
 	[ -e "$data_dir/.lighthost-managed" ] || : > "$data_dir/.lighthost-managed"
-	chown -R lighthost:lighthost "$data_dir/control" "$data_dir/cache" "$data_dir/backups"
-	chmod 700 "$data_dir/control" "$data_dir/cache" "$data_dir/backups"
+	chown -R lighthost:lighthost "$data_dir/control" "$data_dir/cache" "$data_dir/backups" "$data_dir/support"
+	chmod 700 "$data_dir/control" "$data_dir/cache" "$data_dir/backups" "$data_dir/support"
 
 	local database release backup
 	database="$data_dir/control/lighthost.db"
@@ -78,6 +95,7 @@ start_service() {
 		logger -t lighthost "refusing non-production auth_mode: $auth_mode"
 		return 1
 	}
+	resolve_backup_repository
 	prepare_data || return 1
 	prepare_docker_manager_token || return 1
 	mkdir -p "$run_dir" || return 1
@@ -94,7 +112,7 @@ start_service() {
 		"LIGHTHOST_PRIV_EXPECTED_UID=$uid" \
 		"LIGHTHOST_PRIV_GROUP_ID=$gid" \
 		"LIGHTHOST_STORAGE_POOL=$storage_pool" \
-		"LIGHTHOST_BACKUP_REPOSITORY=$backup_repository" \
+		"LIGHTHOST_BACKUP_REPOSITORY=$backup_repository_active" \
 		"LIGHTHOST_BACKUP_REPOSITORY_OWNER=$backup_repository_owner"
 	procd_set_param user root
 	procd_set_param respawn 3600 5 5
@@ -106,9 +124,12 @@ start_service() {
 	procd_set_param command /usr/sbin/lighthost daemon
 	procd_set_param env \
 		"LIGHTHOST_CONTROL_DB=$data_dir/control/lighthost.db" \
+		"LIGHTHOST_SUPPORT_DIR=$data_dir/support" \
 		"LIGHTHOST_HTTP_SOCKET=$http_socket" \
 		"LIGHTHOST_PRIV_SOCKET=$priv_socket" \
-		"LIGHTHOST_BACKUP_REPOSITORY=$backup_repository" \
+		"LIGHTHOST_BACKUP_REPOSITORY_PATH=$backup_repository_configured" \
+		"LIGHTHOST_BACKUP_REPOSITORY_RESOLVED=$backup_repository_active" \
+		"LIGHTHOST_BACKUP_REPOSITORY_STATE=$backup_repository_state" \
 		"LIGHTHOST_BACKUP_REPOSITORY_ID=$backup_repository_id"
 	[ -z "$docker_manager_token_file" ] || procd_append_param env \
 		"LIGHTHOST_DOCKER_MANAGER_SOCKET=$docker_manager_socket" \

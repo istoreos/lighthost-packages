@@ -2,7 +2,8 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=lighthost
 PKG_VERSION:=0.3.0
-PKG_RELEASE?=1
+LIGHTHOST_PKG_RELEASE?=1
+PKG_RELEASE:=$(LIGHTHOST_PKG_RELEASE)
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 PKG_MAINTAINER:=LinkEase <support@linkease.com>
 PKG_LICENSE:=UNLICENSED
@@ -20,7 +21,7 @@ define Package/lighthost
   CATEGORY:=Administration
   TITLE:=LightHost control plane
   URL:=https://github.com/linkease/linkease-lighthost
-  DEPENDS:=+ca-bundle +libsqlite3 +shadow-groupadd +shadow-useradd
+  DEPENDS:=+ca-bundle +libsqlite3 +shadow-groupadd +shadow-useradd +block-mount +jsonfilter +mount-utils
 endef
 
 define Package/lighthost/description
@@ -41,7 +42,7 @@ if [ -z "$${IPKG_INSTROOT}" ]; then
 	grep -q '^lighthost:' /etc/passwd || \
 		useradd --system --gid lighthost --home-dir /var/run/lighthost \
 			--shell /bin/false --no-create-home lighthost
-	killall -s HUP ubusd >/dev/null 2>&1 || true
+	[ ! -x /etc/init.d/rpcd ] || /etc/init.d/rpcd reload >/dev/null 2>&1 || true
 fi
 exit 0
 endef
@@ -57,7 +58,7 @@ endef
 define Package/lighthost/postrm
 #!/bin/sh
 if [ -z "$${IPKG_INSTROOT}" ]; then
-	killall -s HUP ubusd >/dev/null 2>&1 || true
+	[ ! -x /etc/init.d/rpcd ] || /etc/init.d/rpcd reload >/dev/null 2>&1 || true
 fi
 exit 0
 endef
@@ -119,6 +120,7 @@ define Package/lighthost/install
 	$(INSTALL_BIN) ./files/lighthost-ready $(1)/usr/bin/lighthost-ready
 	$(INSTALL_BIN) ./files/lighthost-diagnostics $(1)/usr/sbin/lighthost-diagnostics
 	$(INSTALL_BIN) ./files/lighthost-purge $(1)/usr/sbin/lighthost-purge
+	$(INSTALL_BIN) ./files/lighthost-repository-resolve $(1)/usr/sbin/lighthost-repository-resolve
 	$(INSTALL_CONF) ./files/lighthost.config $(1)/etc/config/lighthost
 	$(INSTALL_DATA) ./files/lighthost-ubus-acl.json $(1)/usr/share/acl.d/lighthost.json
 	printf '%s\n' '$(PKG_VERSION)-r$(PKG_RELEASE)' > $(1)/usr/share/lighthost/release
