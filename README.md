@@ -12,8 +12,10 @@ Current build order:
 3. `cowsql`
 4. `incus`
 5. `lighthost` and `lighthost-ui`
-6. S5 only: feed `qemu`, `lighthost-qemu-firmware`, and the separate
-   `incus-agent` output from the Incus package
+6. S5 only: feed `qemu`, `usbredir`, `libaio`, `lighthost-qemu-firmware`,
+   `lighthost-dhcp-release`, the packages-feed `coreutils-dd`, and the separate
+   `incus-agent` output
+   from the Incus package
 
 The build entry point is `scripts/build-env.sh`; do not copy these packages
 manually into the shared iStoreOS source tree. The LightHost package compiles
@@ -22,12 +24,28 @@ verified `frontend/dist` output. It never downloads a Docker image.
 
 VM dependencies are selected only by the `build-vm-userspace` action. Their
 versions and source hashes are locked in
-`toolchains/istoreos-24.10-x86_64-vm.lock`. The resolved 29-package runtime
+`toolchains/istoreos-24.10-x86_64-vm.lock`. The resolved 37-package runtime
 closure is locked in `toolchains/istoreos-24.10-x86_64-vm-packages.lock.tsv`;
 they are not part of the system-container package set.
 
-The locked packages feed needs one repository-owned QEMU adaptation:
-`patches/openwrt-packages/qemu/0001-disable-png-without-vnc.patch`. It disables
-QEMU's automatic PNG detection when VNC is disabled, keeping the ELF runtime
-dependencies consistent with the OpenWrt package metadata. The patch checksum
-is verified by `scripts/build-env.sh` before compilation.
+The locked packages feed needs repository-owned QEMU adaptations for the
+Incus-generated VM topology. They disable automatic PNG detection when VNC is
+disabled, enable `usb-redir`, enable VirtFS for the agent channel, and enable
+Linux native AIO with explicit `libaio` dependencies for the system emulator
+and image tools. Every patch checksum is verified by `scripts/build-env.sh`
+before compilation. Host USB passthrough remains disabled; `usb-redir` is a
+QEMU device-model requirement here, not an exposed product feature.
+
+Incus' `dir` storage driver uses GNU `dd` with `conv=nocreat` for VM disk
+snapshots. The immutable runtime therefore includes the locked `coreutils-dd`
+and `coreutils-nice` 9.7 packages plus their `coreutils` dependency. Release
+assembly records both aliases in `metadata/RUNTIME-ALIASES.tsv`. GNU `nice` is
+required because the BusyBox multicall `nice` invokes its own `dd` applet and
+bypasses PATH; that applet does not implement the required conversion flag.
+
+VM Gate cleanup uses the upstream dnsmasq 2.90 `dhcp_release` utility packaged
+alone as `lighthost-dhcp-release`. Its source and IPK are locked like every
+other VM package, including its explicit `libc` and `libgcc1` runtime
+dependencies. It releases only leases matching the dedicated Gate MAC and
+avoids editing UCI, rewriting dnsmasq's lease file, or restarting the host
+DHCP/DNS service.
