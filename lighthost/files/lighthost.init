@@ -22,6 +22,8 @@ load_lighthost_config() {
 	config_get docker_manager_socket "$1" docker_manager_socket "/var/run/dockermanager.sock"
 	config_get docker_manager_token_file "$1" docker_manager_token_file "/etc/lighthost/docker-manager.token"
 	config_get node_id "$1" node_id "local"
+	config_get_bool vm_workflow_enabled "$1" vm_workflow_enabled 0
+	config_get vm_acceptance_socket "$1" vm_acceptance_socket "$run_dir/vm-acceptance.sock"
 }
 
 resolve_backup_repository() {
@@ -131,6 +133,9 @@ start_service() {
 		"LIGHTHOST_BACKUP_REPOSITORY_RESOLVED=$backup_repository_active" \
 		"LIGHTHOST_BACKUP_REPOSITORY_STATE=$backup_repository_state" \
 		"LIGHTHOST_BACKUP_REPOSITORY_ID=$backup_repository_id"
+	[ "$vm_workflow_enabled" = 0 ] || procd_append_param env \
+		"LIGHTHOST_VM_WORKFLOW_ENABLED=1" \
+		"LIGHTHOST_VM_ACCEPTANCE_SOCKET=$vm_acceptance_socket"
 	[ -z "$docker_manager_token_file" ] || procd_append_param env \
 		"LIGHTHOST_DOCKER_MANAGER_SOCKET=$docker_manager_socket" \
 		"LIGHTHOST_DOCKER_MANAGER_TOKEN_FILE=$docker_manager_token_file" \
