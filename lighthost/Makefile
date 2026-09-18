@@ -28,7 +28,8 @@ define Package/lighthost/description
  LightHost manages an existing native Incus runtime through a non-root control
  daemon and a narrowly scoped root helper. Readiness checks enforce the runtime
  contract. S4 adds EXT4-compatible snapshots, isolated backups and custom data
- volumes; QEMU, KVM and root-disk quotas remain intentionally excluded.
+ volumes. A unified runtime may include QEMU/KVM, while the public VM product
+ capability remains disabled until its independent product gates pass.
 endef
 
 define Package/lighthost/conffiles
