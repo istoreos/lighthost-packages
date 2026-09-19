@@ -11,7 +11,7 @@ PKG_BUILD_PARALLEL:=1
 
 include $(INCLUDE_DIR)/package.mk
 
-LIGHTHOST_SOURCE_ROOT?=$(CURDIR)/../../..
+LIGHTHOST_SOURCE_ROOT?=$(if $(wildcard $(CURDIR)/../sources/lighthost-$(PKG_VERSION)/backend/go.mod),$(CURDIR)/../sources/lighthost-$(PKG_VERSION),$(CURDIR)/../../..)
 LIGHTHOST_GO?=$(LIGHTHOST_GO_ROOT)/bin/go
 LIGHTHOST_GOARCH?=amd64
 LIGHTHOST_GO_CACHE:=$(TMP_DIR)/go-build-lighthost-$(PKG_VERSION)
