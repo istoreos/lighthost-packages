@@ -21,7 +21,7 @@ define Package/lighthost
   CATEGORY:=Administration
   TITLE:=LightHost control plane
   URL:=https://github.com/linkease/linkease-lighthost
-  DEPENDS:=+ca-bundle +libsqlite3 +shadow-groupadd +shadow-useradd +block-mount +jsonfilter +mount-utils
+  DEPENDS:=+ca-bundle +curl +libsqlite3 +shadow-groupadd +shadow-useradd +block-mount +jsonfilter +mount-utils
 endef
 
 define Package/lighthost/description
