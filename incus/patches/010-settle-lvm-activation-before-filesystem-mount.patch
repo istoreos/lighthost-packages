@@ -1,0 +1,37 @@
+From: LightHost Maintainers <support@linkease.com>
+Subject: [PATCH] storage/lvm: settle activation before filesystem mount
+
+OpenWrt dispatches device-mapper remove events asynchronously. A remove event
+from a previous deactivation can therefore arrive after the same dm-N name has
+been reused by a subsequent activation. block hotplug then detaches the new
+mount by device name while Incus is preparing an idmapped container rootfs.
+
+Wait after a real filesystem-volume activation and before exposing a new mount.
+This lets stale remove events drain while there is no filesystem mount for them
+to detach. Already-active volumes do not pay the delay.
+
+--- a/internal/server/storage/drivers/driver_lvm_volumes.go
++++ b/internal/server/storage/drivers/driver_lvm_volumes.go
+@@ -11,6 +11,7 @@ import (
+ 	"os/exec"
+ 	"path/filepath"
+ 	"strings"
++	"time"
+ 
+ 	"golang.org/x/sys/unix"
+ 
+@@ -997,6 +998,14 @@ func (d *lvm) MountVolume(vol Volume, op
+ 		return err
+ 	}
+ 
++	// OpenWrt handles device-mapper remove events asynchronously. If a recently
++	// deactivated dm-N name is reused, a stale remove event can detach a new
++	// filesystem mount. Let those events drain before the mount becomes visible.
++	// Volumes that were already active don't need the stabilization window.
++	if activated && vol.contentType == ContentTypeFS {
++		time.Sleep(2 * time.Second)
++	}
++
+ 	if activated {
+ 		reverter.Add(func() { _, _ = d.deactivateVolume(vol) })
+ 	}
