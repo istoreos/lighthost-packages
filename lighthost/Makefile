@@ -43,6 +43,8 @@ if [ -z "$${IPKG_INSTROOT}" ]; then
 	grep -q '^lighthost:' /etc/passwd || \
 		useradd --system --gid lighthost --home-dir /var/run/lighthost \
 			--shell /bin/false --no-create-home lighthost
+	ubusd_pids="$$(pidof ubusd 2>/dev/null || true)"
+	[ -z "$${ubusd_pids}" ] || kill -HUP $${ubusd_pids}
 	[ ! -x /etc/init.d/rpcd ] || /etc/init.d/rpcd reload >/dev/null 2>&1 || true
 fi
 exit 0
