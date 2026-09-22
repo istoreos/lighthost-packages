@@ -30,7 +30,12 @@ for marker in "$configured/.lighthost-backup-repository.json" /mnt/*/repository/
 	[ "$serial" = "$expected_serial" ] || continue
 	source="$(findmnt -n -o SOURCE --target "$repository" 2>/dev/null || true)"
 	case "$source" in /dev/*) ;; *) continue ;; esac
-	actual_uuid="$(block info "$source" 2>/dev/null | sed -n 's/.*UUID="\([^"]*\)".*/\1/p' | head -n 1)"
+	actual_uuid="$(findmnt -n -o UUID --target "$repository" 2>/dev/null | head -n 1)"
+	case "$actual_uuid" in ''|'-')
+		actual_uuid="$(block info "$source" 2>/dev/null | sed -n 's/.*UUID="\([^"]*\)".*/\1/p' | head -n 1)"
+		;;
+	esac
+	case "$actual_uuid" in *[!A-Fa-f0-9-]*|'') continue ;; esac
 	[ "$actual_uuid" = "$expected_uuid" ] || continue
 	matches="$matches $repository"
 	match_count=$((match_count + 1))
