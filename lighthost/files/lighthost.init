@@ -6,6 +6,7 @@ USE_PROCD=1
 
 release_file=/usr/share/lighthost/release
 run_dir=/var/run/lighthost
+runtime_env=/etc/lighthost/runtime.env
 
 load_lighthost_config() {
 	config_get_bool enabled "$1" enabled 0
@@ -24,6 +25,25 @@ load_lighthost_config() {
 	config_get node_id "$1" node_id "local"
 	config_get_bool vm_workflow_enabled "$1" vm_workflow_enabled 0
 	config_get vm_acceptance_socket "$1" vm_acceptance_socket "$run_dir/vm-acceptance.sock"
+}
+
+load_runtime_config() {
+	runtime_current_link=""
+	runtime_state_dir=""
+	[ -r "$runtime_env" ] || return 0
+	LIGHTHOST_CURRENT_LINK=""
+	LIGHTHOST_STATE_DIR=""
+	. "$runtime_env" || return 1
+	case "$LIGHTHOST_CURRENT_LINK:$LIGHTHOST_STATE_DIR" in
+		/mnt/*/lighthost/current:/mnt/*/lighthost/state)
+			runtime_current_link="$LIGHTHOST_CURRENT_LINK"
+			runtime_state_dir="$LIGHTHOST_STATE_DIR"
+			;;
+		*)
+			logger -t lighthost "refusing unsafe runtime paths from $runtime_env"
+			return 1
+			;;
+	esac
 }
 
 resolve_backup_repository() {
@@ -93,6 +113,7 @@ start_service() {
 	config_load lighthost
 	config_foreach load_lighthost_config lighthost
 	[ "$enabled" = 1 ] || return 0
+	load_runtime_config || return 1
 	[ "$auth_mode" = openwrt ] || {
 		logger -t lighthost "refusing non-production auth_mode: $auth_mode"
 		return 1
@@ -133,6 +154,10 @@ start_service() {
 		"LIGHTHOST_BACKUP_REPOSITORY_RESOLVED=$backup_repository_active" \
 		"LIGHTHOST_BACKUP_REPOSITORY_STATE=$backup_repository_state" \
 		"LIGHTHOST_BACKUP_REPOSITORY_ID=$backup_repository_id"
+	[ -z "$runtime_current_link" ] || procd_append_param env \
+		"LIGHTHOST_CURRENT_LINK=$runtime_current_link" \
+		"LIGHTHOST_STATE_DIR=$runtime_state_dir" \
+		"LIGHTHOST_STORAGE_POOL=$storage_pool"
 	[ "$vm_workflow_enabled" = 0 ] || procd_append_param env \
 		"LIGHTHOST_VM_WORKFLOW_ENABLED=1" \
 		"LIGHTHOST_VM_ACCEPTANCE_SOCKET=$vm_acceptance_socket"
