@@ -1,0 +1,80 @@
+#!/bin/sh
+
+set -eu
+umask 077
+
+data_dir="$(uci -q get lighthost.@lighthost[0].data_dir || true)"
+[ -n "$data_dir" ] || {
+	echo 'LightHost data directory is not configured' >&2
+	exit 2
+}
+support_dir="$data_dir/support"
+output="${1:-$support_dir/lighthost-diagnostics-$(date -u +%Y%m%dT%H%M%SZ).tar.gz}"
+case "$output" in
+	"$support_dir"/*.tar.gz) ;;
+	*) echo "output path must be under $support_dir" >&2; exit 2 ;;
+esac
+
+mkdir -p "$support_dir"
+chown lighthost:lighthost "$support_dir"
+chmod 0700 "$support_dir"
+
+work="$(mktemp -d /tmp/lighthost-diagnostics.XXXXXX)"
+trap 'rm -rf "$work"' EXIT INT TERM
+
+release="$(cat /usr/share/lighthost/release 2>/dev/null || echo unknown)"
+enabled="$(uci -q get lighthost.@lighthost[0].enabled || echo 0)"
+ready=no
+/usr/bin/lighthost-ready >/dev/null 2>&1 && ready=yes
+
+cat > "$work/summary.txt" <<EOF
+format=1
+release=$release
+enabled=$enabled
+ready=$ready
+kernel=$(uname -r)
+architecture=$(uname -m)
+data_dir_configured=$([ -n "$data_dir" ] && echo yes || echo no)
+EOF
+
+created_epoch="$(date +%s)"
+expires_epoch="$((created_epoch + 7 * 24 * 60 * 60))"
+cat > "$work/.lighthost-diagnostics-owner" <<EOF
+format=2
+owner=linkease-lighthost
+release=$release
+created_epoch=$created_epoch
+expires_epoch=$expires_epoch
+EOF
+
+{
+	for interface in br-lan lighthost-lan lh-lan-op lh-lan-d; do
+		if [ -e "/sys/class/net/$interface" ]; then
+			printf '%s present operstate=' "$interface"
+			cat "/sys/class/net/$interface/operstate" 2>/dev/null || echo unknown
+		else
+			echo "$interface absent"
+		fi
+	done
+} > "$work/network.txt"
+
+if [ -x /usr/bin/incus ]; then
+	/usr/bin/incus list --format csv -c ns4 > "$work/instances.csv" 2> "$work/incus-error.txt" || true
+else
+	echo 'Incus client absent' > "$work/incus-error.txt"
+fi
+
+df -h /mnt 2>/dev/null > "$work/storage.txt" || true
+ps w 2>/dev/null | awk 'NR == 1 || /[l]ighthost (daemon|privileged-daemon)/ {print}' > "$work/processes.txt"
+(
+	cd "$work"
+	find . -type f ! -name MANIFEST.sha256 -print | LC_ALL=C sort | xargs sha256sum > MANIFEST.sha256
+)
+if grep -rIlE -e '-----BEGIN ([A-Z ]+ )?PRIVATE KEY-----|linkease_openwrt_sid=[^[:space:]]+|Authorization:[[:space:]]*Bearer[[:space:]]+[^[:space:]]+|"(token|secret|privateKey)"[[:space:]]*:[[:space:]]*"[^"[:space:]]+' "$work" | grep -q .; then
+	echo 'diagnostics secret scan failed' >&2
+	exit 1
+fi
+tar -C "$work" -czf "$output" .
+chmod 0600 "$output"
+chown lighthost:lighthost "$output"
+echo "$output"

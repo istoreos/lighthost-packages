@@ -1,0 +1,8 @@
+{
+  "user": "lighthost",
+  "access": {
+    "session": {
+      "methods": ["get"]
+    }
+  }
+}

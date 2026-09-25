@@ -1,0 +1,10 @@
+--- a/share/lxc.reboot.hook.in
++++ b/share/lxc.reboot.hook.in
+@@ -1,3 +1,6 @@
+ #!/bin/sh -eu
+ 
+-sleep 0.5s
++# BusyBox sleep on iStoreOS only accepts whole seconds. This hook runs before
++# Incus' post-stop hook, so a fractional sleep failure leaves the instance
++# recorded as RUNNING after its init process has already exited.
++sleep 1

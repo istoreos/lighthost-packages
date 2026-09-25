@@ -1,0 +1,178 @@
+#!/bin/sh /etc/rc.common
+
+START=95
+STOP=15
+USE_PROCD=1
+
+release_file=/usr/share/lighthost/release
+run_dir=/var/run/lighthost
+runtime_env=/etc/lighthost/runtime.env
+
+load_lighthost_config() {
+	config_get_bool enabled "$1" enabled 0
+	config_get data_dir "$1" data_dir ""
+	config_get http_socket "$1" http_socket "$run_dir/http.sock"
+	config_get priv_socket "$1" priv_socket "$run_dir/priv.sock"
+	config_get storage_pool "$1" storage_pool "default"
+	config_get auth_mode "$1" auth_mode "openwrt"
+	config_get backup_repository "$1" backup_repository ""
+	config_get backup_repository_owner "$1" backup_repository_owner "lighthost"
+	config_get backup_repository_id "$1" backup_repository_id "00000000-0000-7000-8000-000000000901"
+	config_get backup_repository_disk_serial "$1" backup_repository_disk_serial ""
+	config_get backup_repository_uuid "$1" backup_repository_uuid ""
+	config_get docker_manager_socket "$1" docker_manager_socket "/var/run/dockermanager.sock"
+	config_get docker_manager_token_file "$1" docker_manager_token_file "/etc/lighthost/docker-manager.token"
+	config_get node_id "$1" node_id "local"
+	config_get_bool vm_workflow_enabled "$1" vm_workflow_enabled 0
+	config_get vm_acceptance_socket "$1" vm_acceptance_socket "$run_dir/vm-acceptance.sock"
+}
+
+load_runtime_config() {
+	runtime_current_link=""
+	runtime_state_dir=""
+	[ -r "$runtime_env" ] || return 0
+	LIGHTHOST_CURRENT_LINK=""
+	LIGHTHOST_STATE_DIR=""
+	. "$runtime_env" || return 1
+	case "$LIGHTHOST_CURRENT_LINK:$LIGHTHOST_STATE_DIR" in
+		/mnt/*/lighthost/current:/mnt/*/lighthost/state)
+			runtime_current_link="$LIGHTHOST_CURRENT_LINK"
+			runtime_state_dir="$LIGHTHOST_STATE_DIR"
+			;;
+		*)
+			logger -t lighthost "refusing unsafe runtime paths from $runtime_env"
+			return 1
+			;;
+	esac
+}
+
+resolve_backup_repository() {
+	backup_repository_configured="$backup_repository"
+	backup_repository_active=""
+	backup_repository_state="unavailable"
+	[ -n "$backup_repository_configured" ] || return 0
+	if resolved="$(/usr/sbin/lighthost-repository-resolve \
+		"$backup_repository_configured" "$backup_repository_owner" \
+		"$backup_repository_disk_serial" "$backup_repository_uuid" 2>/dev/null)"; then
+		backup_repository_active="$resolved"
+		backup_repository_state="available"
+	else
+		logger -t lighthost "backup repository unavailable or identity mismatch: $backup_repository_configured"
+	fi
+}
+
+valid_data_dir() {
+	case "$1" in
+		/mnt/*/lighthost|/mnt/*/lighthost/*) return 0 ;;
+		*) return 1 ;;
+	esac
+}
+
+prepare_data() {
+	valid_data_dir "$data_dir" || {
+		logger -t lighthost "refusing unsafe data_dir: $data_dir"
+		return 1
+	}
+	mkdir -p "$data_dir/control" "$data_dir/cache" "$data_dir/backups" "$data_dir/support" || return 1
+	[ -e "$data_dir/.lighthost-managed" ] || : > "$data_dir/.lighthost-managed"
+	chown -R lighthost:lighthost "$data_dir/control" "$data_dir/cache" "$data_dir/backups" "$data_dir/support"
+	chmod 700 "$data_dir/control" "$data_dir/cache" "$data_dir/backups" "$data_dir/support"
+
+	local database release backup
+	database="$data_dir/control/lighthost.db"
+	release="$(cat "$release_file" 2>/dev/null || echo unknown)"
+	backup="$data_dir/backups/control-prestart-$release"
+	if [ -f "$database" ] && [ ! -e "$backup.db" ]; then
+		cp -p "$database" "$backup.db" || return 1
+		[ ! -f "$database-wal" ] || cp -p "$database-wal" "$backup.db-wal" || return 1
+		[ ! -f "$database-shm" ] || cp -p "$database-shm" "$backup.db-shm" || return 1
+		chown lighthost:lighthost "$backup.db" "$backup.db-wal" "$backup.db-shm" 2>/dev/null || true
+		chmod 600 "$backup.db" "$backup.db-wal" "$backup.db-shm" 2>/dev/null || true
+	fi
+}
+
+prepare_docker_manager_token() {
+	[ -n "$docker_manager_token_file" ] || return 0
+	case "$docker_manager_token_file" in
+		/etc/lighthost/*) ;;
+		*)
+			logger -t lighthost "refusing unsafe docker_manager_token_file: $docker_manager_token_file"
+			return 1
+			;;
+	esac
+	mkdir -p "$(dirname "$docker_manager_token_file")" || return 1
+	if [ ! -s "$docker_manager_token_file" ]; then
+		umask 077
+		head -c 32 /dev/urandom | base64 > "$docker_manager_token_file" || return 1
+	fi
+	chown root:lighthost "$docker_manager_token_file" || return 1
+	chmod 640 "$docker_manager_token_file" || return 1
+}
+
+start_service() {
+	config_load lighthost
+	config_foreach load_lighthost_config lighthost
+	[ "$enabled" = 1 ] || return 0
+	load_runtime_config || return 1
+	[ "$auth_mode" = openwrt ] || {
+		logger -t lighthost "refusing non-production auth_mode: $auth_mode"
+		return 1
+	}
+	resolve_backup_repository
+	prepare_data || return 1
+	prepare_docker_manager_token || return 1
+	mkdir -p "$run_dir" || return 1
+	chown root:lighthost "$run_dir"
+	chmod 770 "$run_dir"
+	local uid gid
+	uid="$(id -u lighthost)" || return 1
+	gid="$(id -g lighthost)" || return 1
+
+	procd_open_instance privileged
+	procd_set_param command /usr/sbin/lighthost privileged-daemon
+	procd_set_param env \
+		"LIGHTHOST_PRIV_SOCKET=$priv_socket" \
+		"LIGHTHOST_PRIV_EXPECTED_UID=$uid" \
+		"LIGHTHOST_PRIV_GROUP_ID=$gid" \
+		"LIGHTHOST_STORAGE_POOL=$storage_pool" \
+		"LIGHTHOST_BACKUP_REPOSITORY=$backup_repository_active" \
+		"LIGHTHOST_BACKUP_REPOSITORY_OWNER=$backup_repository_owner"
+	procd_set_param user root
+	procd_set_param respawn 3600 5 5
+	procd_set_param stdout 1
+	procd_set_param stderr 1
+	procd_close_instance
+
+	procd_open_instance control
+	procd_set_param command /usr/sbin/lighthost daemon
+	procd_set_param env \
+		"LIGHTHOST_CONTROL_DB=$data_dir/control/lighthost.db" \
+		"LIGHTHOST_SUPPORT_DIR=$data_dir/support" \
+		"LIGHTHOST_HTTP_SOCKET=$http_socket" \
+		"LIGHTHOST_PRIV_SOCKET=$priv_socket" \
+		"LIGHTHOST_BACKUP_REPOSITORY_PATH=$backup_repository_configured" \
+		"LIGHTHOST_BACKUP_REPOSITORY_RESOLVED=$backup_repository_active" \
+		"LIGHTHOST_BACKUP_REPOSITORY_STATE=$backup_repository_state" \
+		"LIGHTHOST_BACKUP_REPOSITORY_ID=$backup_repository_id"
+	[ -z "$runtime_current_link" ] || procd_append_param env \
+		"LIGHTHOST_CURRENT_LINK=$runtime_current_link" \
+		"LIGHTHOST_STATE_DIR=$runtime_state_dir" \
+		"LIGHTHOST_STORAGE_POOL=$storage_pool"
+	[ "$vm_workflow_enabled" = 0 ] || procd_append_param env \
+		"LIGHTHOST_VM_WORKFLOW_ENABLED=1" \
+		"LIGHTHOST_VM_ACCEPTANCE_SOCKET=$vm_acceptance_socket"
+	[ -z "$docker_manager_token_file" ] || procd_append_param env \
+		"LIGHTHOST_DOCKER_MANAGER_SOCKET=$docker_manager_socket" \
+		"LIGHTHOST_DOCKER_MANAGER_TOKEN_FILE=$docker_manager_token_file" \
+		"LIGHTHOST_NODE_ID=$node_id"
+	procd_set_param user lighthost
+	procd_set_param group lighthost
+	procd_set_param respawn 3600 5 5
+	procd_set_param stdout 1
+	procd_set_param stderr 1
+	procd_close_instance
+}
+
+service_triggers() {
+	procd_add_reload_trigger lighthost
+}
