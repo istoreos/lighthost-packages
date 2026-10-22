@@ -1,0 +1,76 @@
+#!/bin/sh
+
+set -eu
+
+target_dir="${LIGHTHOST_VM_PILOT_DIR:-/etc/lighthost/vm-pilot}"
+host_id_file="${LIGHTHOST_HOST_ID_FILE:-/mnt/lighthost-data/lighthost/control/host-id}"
+case "$target_dir" in
+	/etc/lighthost/vm-pilot|/tmp/lighthost-vm-pilot-test.*) ;;
+	*) printf '%s\n' "refusing unsafe VM Pilot directory: $target_dir" >&2; exit 1 ;;
+esac
+case "$host_id_file" in
+	/mnt/*/lighthost/control/host-id|/tmp/lighthost-vm-pilot-test.*) ;;
+	*) printf '%s\n' "refusing unsafe LightHost identity file: $host_id_file" >&2; exit 1 ;;
+esac
+
+policy="$target_dir/policy.json"
+public_key="$target_dir/release-signer.pub"
+
+require_root() {
+	[ "$(id -u)" = 0 ] || { printf '%s\n' 'root is required' >&2; exit 1; }
+}
+
+case "${1:-}" in
+	install)
+	require_root
+	[ "$#" = 5 ] || { printf '%s\n' 'usage: lighthost-vm-pilot-policy install DOCUMENT PUBLIC_KEY DEVICE_ID PRINCIPAL_ID' >&2; exit 1; }
+	document_source="$2"
+	key_source="$3"
+	device_id="$4"
+	principal_id="$5"
+	[ -f "$host_id_file" ] && [ ! -L "$host_id_file" ] || { printf '%s\n' 'LightHost host identity is missing' >&2; exit 1; }
+	local_device_id="$(sed -n '1{s/[[:space:]]*$//;p;}' "$host_id_file")"
+	[ -n "$local_device_id" ] && [ "$device_id" = "$local_device_id" ] || { printf '%s\n' 'signed policy device does not match this LightHost installation' >&2; exit 1; }
+	/usr/bin/lighthost-vm-pilot-policy verify \
+		--document "$document_source" --public-key "$key_source" \
+		--device-id "$device_id" --principal-id "$principal_id" >/dev/null
+	mkdir -p "$target_dir"
+	chown root:lighthost "$target_dir"
+	chmod 0750 "$target_dir"
+	key_new="$public_key.new.$$"
+	policy_new="$policy.new.$$"
+	trap 'rm -f "$key_new" "$policy_new"' EXIT HUP INT TERM
+	cp "$key_source" "$key_new"
+	cp "$document_source" "$policy_new"
+	chown root:lighthost "$key_new" "$policy_new"
+	chmod 0644 "$key_new"
+	chmod 0640 "$policy_new"
+	mv -f "$key_new" "$public_key"
+	mv -f "$policy_new" "$policy"
+	trap - EXIT HUP INT TERM
+	printf '%s\n' 'vm_pilot_policy=INSTALLED' 'daemon_restart=NOT_REQUIRED'
+	;;
+	revoke)
+	require_root
+	[ "$#" = 1 ] || { printf '%s\n' 'usage: lighthost-vm-pilot-policy revoke' >&2; exit 1; }
+	if [ -f "$policy" ] && [ ! -L "$policy" ]; then
+		revoked="$target_dir/policy.revoked.$(date -u +%Y%m%dT%H%M%SZ).json"
+		mv "$policy" "$revoked"
+		chmod 0600 "$revoked"
+		printf '%s\n' 'vm_pilot_policy=REVOKED' "retained=$revoked" 'daemon_restart=NOT_REQUIRED'
+	else
+		printf '%s\n' 'vm_pilot_policy=NOT_INSTALLED'
+	fi
+	;;
+	status)
+	if [ -f "$policy" ] && [ ! -L "$policy" ]; then
+		printf '%s\n' 'vm_pilot_policy=INSTALLED' "policy=$policy" "public_key=$public_key"
+	else
+		printf '%s\n' 'vm_pilot_policy=REVOKED_OR_MISSING'
+	fi
+	;;
+	*)
+	printf '%s\n' 'usage: lighthost-vm-pilot-policy install|revoke|status' >&2
+	exit 1
+	;;
+esac

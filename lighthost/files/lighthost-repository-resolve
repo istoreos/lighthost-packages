@@ -1,0 +1,49 @@
+#!/bin/sh
+
+set -eu
+
+[ "$#" -eq 4 ] || {
+	echo 'usage: lighthost-repository-resolve CONFIGURED_PATH OWNER DISK_SERIAL FILESYSTEM_UUID' >&2
+	exit 2
+}
+
+configured="$1"
+expected_owner="$2"
+expected_serial="$3"
+expected_uuid="$4"
+
+case "$configured" in /mnt/*/repository) ;; *) echo 'unsafe backup repository path' >&2; exit 2 ;; esac
+case "$expected_owner" in *[!A-Za-z0-9._-]*|'') echo 'unsafe backup repository owner' >&2; exit 2 ;; esac
+case "$expected_serial" in *[!A-Za-z0-9._:-]*|'') echo 'unsafe backup media serial' >&2; exit 2 ;; esac
+case "$expected_uuid" in *[!A-Fa-f0-9-]*|'') echo 'unsafe backup filesystem UUID' >&2; exit 2 ;; esac
+
+matches=''
+match_count=0
+for marker in "$configured/.lighthost-backup-repository.json" /mnt/*/repository/.lighthost-backup-repository.json; do
+	[ -f "$marker" ] || continue
+	repository="${marker%/.lighthost-backup-repository.json}"
+	case "$repository" in /mnt/*/repository) ;; *) continue ;; esac
+	case " $matches " in *" $repository "*) continue ;; esac
+	owner="$(jsonfilter -i "$marker" -e @.owner 2>/dev/null || true)"
+	serial="$(jsonfilter -i "$marker" -e @.disk_serial 2>/dev/null || true)"
+	[ "$owner" = "$expected_owner" ] || continue
+	[ "$serial" = "$expected_serial" ] || continue
+	source="$(findmnt -n -o SOURCE --target "$repository" 2>/dev/null || true)"
+	case "$source" in /dev/*) ;; *) continue ;; esac
+	actual_uuid="$(findmnt -n -o UUID --target "$repository" 2>/dev/null | head -n 1)"
+	case "$actual_uuid" in ''|'-')
+		actual_uuid="$(block info "$source" 2>/dev/null | sed -n 's/.*UUID="\([^"]*\)".*/\1/p' | head -n 1)"
+		;;
+	esac
+	case "$actual_uuid" in *[!A-Fa-f0-9-]*|'') continue ;; esac
+	[ "$actual_uuid" = "$expected_uuid" ] || continue
+	matches="$matches $repository"
+	match_count=$((match_count + 1))
+done
+
+[ "$match_count" -eq 1 ] || {
+	[ "$match_count" -eq 0 ] && echo 'backup repository media is unavailable' >&2 || \
+		echo 'multiple backup repositories match the configured identity' >&2
+	exit 1
+}
+printf '%s\n' "${matches# }"
