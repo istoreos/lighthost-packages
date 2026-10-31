@@ -43,6 +43,7 @@ define Package/lighthost-qemu-firmware/install
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/licenses/edk2-licenses.txt $(1)/usr/share/licenses/lighthost-qemu-firmware/
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/licenses/Microsoft-License.txt $(1)/usr/share/licenses/lighthost-qemu-firmware/
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/licenses/windows-vars-source.json $(1)/usr/share/licenses/lighthost-qemu-firmware/
+	find $(1) -type d -exec chmod g-s {} +
 endef
 
 $(eval $(call BuildPackage,lighthost-qemu-firmware))

@@ -64,17 +64,13 @@ define Package/incus/install
 	$(INSTALL_DIR) $(1)/usr/bin $(1)/usr/sbin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bin/incus $(1)/usr/bin/incus
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bin/incusd $(1)/usr/sbin/incusd
-	$(INSTALL_DIR) $(1)/usr/share/licenses/incus
-	$(INSTALL_DATA) $(PKG_BUILD_DIR)/COPYING $(1)/usr/share/licenses/incus/COPYING
-	$(CP) $(PKG_BUILD_DIR)/licenses/. $(1)/usr/share/licenses/incus/
+	find $(1) -type d -exec chmod g-s {} +
 endef
 
 define Package/incus-agent/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/bin/incus-agent $(1)/usr/bin/incus-agent
-	$(INSTALL_DIR) $(1)/usr/share/licenses/incus-agent
-	$(INSTALL_DATA) $(PKG_BUILD_DIR)/COPYING $(1)/usr/share/licenses/incus-agent/COPYING
-	$(CP) $(PKG_BUILD_DIR)/licenses/. $(1)/usr/share/licenses/incus-agent/
+	find $(1) -type d -exec chmod g-s {} +
 endef
 
 $(eval $(call BuildPackage,incus))

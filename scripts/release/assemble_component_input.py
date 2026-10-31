@@ -152,8 +152,9 @@ def assemble(args: argparse.Namespace) -> dict:
     archive_name = ""
 
     if args.component == "lighthost":
-        prefix = "lighthost-0.3.0"
-        archive_name = "lighthost-0.3.0-r87-x86_64.tar.gz"
+        component_version = args.package_version.rsplit("-r", 1)[0]
+        prefix = f"lighthost-{component_version}"
+        archive_name = f"lighthost-{args.package_version}-x86_64.tar.gz"
         mapping = {
             "usr/sbin/lighthost": "bin/lighthost",
             "usr/bin/lighthost-vm-pilot-policy": "bin/lighthost-vm-pilot-policy",
@@ -162,7 +163,7 @@ def assemble(args: argparse.Namespace) -> dict:
         }
         for source, target in mapping.items():
             entries[target] = primary[source]
-        entries.update(select_prefix(primary, "usr/share/licenses/lighthost/", "licenses/"))
+        entries.update(select_prefix(primary, "usr/share/lighthost/licenses/", "licenses/"))
     elif args.component == "lighthost-ui":
         prefix = "lighthost-ui-0.3.0"
         archive_name = "lighthost-ui-0.3.0-r87.1-x86_64.tar.gz"

@@ -37,6 +37,7 @@ endef
 define Package/lighthost-spice-console/install
 	$(INSTALL_DIR) $(1)/usr/share/lighthost/www/spice-console
 	$(CP) $(PKG_BUILD_DIR)/spice-console/. $(1)/usr/share/lighthost/www/spice-console/
+	find $(1) -type d -exec chmod g-s {} +
 endef
 
 $(eval $(call BuildPackage,lighthost-spice-console))

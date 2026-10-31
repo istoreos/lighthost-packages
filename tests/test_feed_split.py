@@ -26,6 +26,24 @@ class FeedSplitTests(unittest.TestCase):
         self.assertNotIn("frontend-dist", makefile)
         self.assertNotIn("spice-console", makefile)
         self.assertNotIn("lighthost-plugin.json", makefile)
+        self.assertIn("$(PKG_BUILD_DIR)/licenses/. $(1)/usr/share/lighthost/licenses/", makefile)
+        self.assertNotIn("/usr/share/lighthost/build-info.json", makefile)
+
+    def test_package_directories_drop_builder_setgid_bit(self):
+        expected_counts = {
+            "lighthost/Makefile": 1,
+            "lighthost-ui/Makefile": 1,
+            "lighthost-spice-console/Makefile": 1,
+            "incus/Makefile": 2,
+            "qemu-firmware/Makefile": 1,
+        }
+        for path, count in expected_counts.items():
+            self.assertEqual(text(path).count("find $(1) -type d -exec chmod g-s {} +"), count, path)
+
+    def test_core_init_matches_r87_runtime_contract(self):
+        init = text("lighthost/files/lighthost.init")
+        self.assertIn('"LIGHTHOST_CONTROL_DB=$data_dir/control/lighthost.db"', init)
+        self.assertIn("LIGHTHOST_VM_ACCEPTANCE_COLLECTION_SCOPE_FILE", init)
 
     def test_ui_contract_is_preserved(self):
         makefile = text("lighthost-ui/Makefile")

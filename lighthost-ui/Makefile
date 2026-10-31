@@ -49,6 +49,7 @@ define Package/lighthost-ui/install
 	$(INSTALL_DATA) ./files/lighthost-plugin.json $(1)/usr/share/lighthost/lighthost-plugin.json
 	ln -sf /usr/share/lighthost/lighthost-plugin.json \
 		$(1)/usr/share/linkeasefull/desktop-apps.d/25-lighthost-plugin.json
+	find $(1) -type d -exec chmod g-s {} +
 endef
 
 $(eval $(call BuildPackage,lighthost-ui))
