@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "repository": "istoreos/istorework-packages",
+  "tag": "lighthost-public-build-inputs-20261014",
+  "uploadedAssetCount": 15,
+  "githubDisplayedAssetCount": 17,
+  "automaticRepositoryArchives": ["Source code (zip)", "Source code (tar.gz)"],
+  "assets": [
+    {"name": "BUILD-MANIFEST.json", "size": 1565, "sha256": "d8eec73e58f68f2713a3f8ffdd01158e01dfff3e06a23a2681938ef1812988dd", "owner": "release-set-evidence"},
+    {"name": "INCUS-BUILD-INFO.json", "size": 1253, "sha256": "93514e08de69110a5010b7263ef06ec95e94610a064ae03ec416d8a8038dd628", "owner": "incus"},
+    {"name": "incus-6.0.6-public-20261014-sources.tar.gz", "size": 13180995, "sha256": "8d947f5de155661728864d36cf8c576d5f04a77a4d330ed25f1342bc2ff9fcad", "owner": "incus"},
+    {"name": "incus-6.0.6-public-20261014-x86_64.tar.gz", "size": 35437852, "sha256": "59226bbf8c001181d71d4dac76690f36b5368bb366e3826688f93f0953f5eba0", "owner": "incus"},
+    {"name": "incus-agent_6.0.6-r7_x86_64.ipk", "size": 7360170, "sha256": "b2707915f44e8f687017c1d9ac863bbfc6192fad281be25303ca9a57ce727913", "owner": "incus"},
+    {"name": "incus_6.0.6-r7_x86_64.ipk", "size": 28369655, "sha256": "a44a0231b942f2755743b1ff873be4410fb7f951f2b946e04ab91174789f4020", "owner": "incus"},
+    {"name": "IPK-SHA256SUMS", "size": 609, "sha256": "b7878e4687c599c53642797251a80ae364679063f6f63b0ff4acbc63e64a1880", "owner": "release-set-evidence"},
+    {"name": "lighthost-0.3.0-r82-65cf9c4d8171-x86_64.tar.gz", "size": 5937685, "sha256": "b1521a479326e9f442156972fe0a2d53a21edc862b2b27b50bcc1cc419491975", "owner": "legacy-mixed-product-input", "legacyComponents": ["lighthost", "lighthost-ui", "lighthost-spice-console"]},
+    {"name": "lighthost-qemu-firmware-202302-public-20261014-x86_64.tar.gz", "size": 3878175, "sha256": "49b8b0b86ac64817385eb50eb259f5005bb48559b05faf4d9b53a0012075d655", "owner": "lighthost-qemu-firmware"},
+    {"name": "lighthost-qemu-firmware_202302-r3_x86_64.ipk", "size": 3867333, "sha256": "afeaebffb419c2764d5208246f8d11525e89d9eb4a3e4c4ee86d19c1b346c299", "owner": "lighthost-qemu-firmware"},
+    {"name": "lighthost-spice-console_0.3.0-r82_x86_64.ipk", "size": 97437, "sha256": "c20bcbed28eb025528c7d2f7cce0e696f340d4c87fbc4f8f58cef851c18830b4", "owner": "lighthost-spice-console"},
+    {"name": "lighthost-ui_0.3.0-r82_x86_64.ipk", "size": 229120, "sha256": "7d281a522fbdabdfa73937e40181251c99260ec6f8de3c3d712faab2cff6c4af", "owner": "lighthost-ui"},
+    {"name": "lighthost_0.3.0-r82_x86_64.ipk", "size": 5648332, "sha256": "e15fcc312041a94036326f93e68c176a34c2ad1ef49e38821b2a86c3551c22de", "owner": "lighthost"},
+    {"name": "PACKAGE-VERIFICATION.json", "size": 5837, "sha256": "b86d27497e5b23c580377c55cdde4c6ff6a5279964b490ae0d5416401c1db48d", "owner": "release-set-evidence"},
+    {"name": "SHA256SUMS", "size": 631, "sha256": "45171809b6156461e0e8adfd0847b49982de64088498d0bdbab58022f144e7a6", "owner": "release-set-evidence"}
+  ]
+}
+

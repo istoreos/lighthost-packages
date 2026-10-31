@@ -8,7 +8,7 @@ PKG_SOURCE_URL:=https://github.com/istoreos/istorework-packages/releases/downloa
 PKG_HASH:=b1521a479326e9f442156972fe0a2d53a21edc862b2b27b50bcc1cc419491975
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 PKG_MAINTAINER:=LinkEase <support@linkease.com>
-PKG_LICENSE:=UNLICENSED GPL-3.0-or-later LGPL-3.0-or-later
+PKG_LICENSE:=UNLICENSED
 PKG_BUILD_PARALLEL:=1
 
 include $(INCLUDE_DIR)/package.mk
@@ -68,40 +68,6 @@ fi
 exit 0
 endef
 
-define Package/lighthost-ui
-  SECTION:=admin
-  CATEGORY:=Administration
-  TITLE:=LightHost LinkEase Desktop interface
-  URL:=https://github.com/linkease/linkease-lighthost
-  DEPENDS:=+lighthost +lighthost-spice-console +linkeasefull
-endef
-
-define Package/lighthost-spice-console
-  SECTION:=admin
-  CATEGORY:=Administration
-  TITLE:=LightHost SPICE graphical console
-  URL:=https://github.com/linkease/linkease-lighthost
-  DEPENDS:=+lighthost
-endef
-
-define Package/lighthost-spice-console/description
- Independently delivered GPL-3.0 graphical console adapter with the
- LGPL-3.0-or-later spice-html5 browser library.
-endef
-
-define Package/lighthost-ui/description
- React interface and LinkEaseFull plugin manifest for the LightHost control plane.
-endef
-
-define Package/lighthost-ui/prerm
-#!/bin/sh
-if [ -z "$${IPKG_INSTROOT}" ]; then
-	link=/usr/share/linkeasefull/desktop-apps.d/25-lighthost-plugin.json
-	[ "$$(readlink "$${link}" 2>/dev/null)" != "/usr/share/lighthost/lighthost-plugin.json" ] || rm -f "$${link}"
-fi
-exit 0
-endef
-
 # Assets were compiled from the frozen source listed in BUILD-INFO.json.
 # Consumers only verify/repackage the pinned x86_64 musl input.
 define Build/Configure
@@ -136,21 +102,4 @@ define Package/lighthost/install
 	printf '%s\n' '$(PKG_VERSION)-r$(PKG_RELEASE)' > $(1)/usr/share/lighthost/release
 endef
 
-define Package/lighthost-ui/install
-	$(INSTALL_DIR) $(1)/usr/share/lighthost/www \
-		$(1)/usr/share/linkeasefull/desktop-apps.d
-	$(CP) $(PKG_BUILD_DIR)/frontend-dist/. $(1)/usr/share/lighthost/www/
-	$(INSTALL_DATA) ./files/logo.svg $(1)/usr/share/lighthost/www/logo.svg
-	$(INSTALL_DATA) ./files/lighthost-plugin.json $(1)/usr/share/lighthost/lighthost-plugin.json
-	ln -sf /usr/share/lighthost/lighthost-plugin.json \
-		$(1)/usr/share/linkeasefull/desktop-apps.d/25-lighthost-plugin.json
-endef
-
-define Package/lighthost-spice-console/install
-	$(INSTALL_DIR) $(1)/usr/share/lighthost/www/spice-console
-	$(CP) $(PKG_BUILD_DIR)/spice-console/. $(1)/usr/share/lighthost/www/spice-console/
-endef
-
 $(eval $(call BuildPackage,lighthost))
-$(eval $(call BuildPackage,lighthost-ui))
-$(eval $(call BuildPackage,lighthost-spice-console))

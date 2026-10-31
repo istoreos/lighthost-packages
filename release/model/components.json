@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "releaseRepository": "istoreos/lighthost-packages",
+  "components": {
+    "lighthost": {
+      "tagPrefix": "lighthost-v",
+      "sourceRepository": "linkease/linkease-lighthost",
+      "sourcePaths": ["backend", "release"],
+      "feedPaths": ["lighthost"],
+      "packages": ["lighthost"],
+      "programs": ["lighthost", "lighthost-vm-pilot-policy"]
+    },
+    "lighthost-ui": {
+      "tagPrefix": "lighthost-ui-v",
+      "sourceRepository": "linkease/linkease-lighthost",
+      "sourcePaths": ["frontend"],
+      "feedPaths": ["lighthost-ui"],
+      "packages": ["lighthost-ui"],
+      "programs": []
+    },
+    "lighthost-spice-console": {
+      "tagPrefix": "lighthost-spice-console-v",
+      "sourceRepository": "linkease/linkease-lighthost",
+      "sourcePaths": ["spice-console"],
+      "feedPaths": ["lighthost-spice-console"],
+      "packages": ["lighthost-spice-console"],
+      "programs": []
+    },
+    "incus": {
+      "tagPrefix": "incus-v",
+      "sourceRepository": "lxc/incus",
+      "sourcePaths": ["."],
+      "feedPaths": ["incus"],
+      "packages": ["incus", "incus-agent"],
+      "programs": ["incus", "incusd", "incus-agent"]
+    },
+    "lighthost-qemu-firmware": {
+      "tagPrefix": "lighthost-qemu-firmware-v",
+      "sourceRepository": "qemu/qemu",
+      "sourcePaths": ["pc-bios"],
+      "feedPaths": ["qemu-firmware"],
+      "packages": ["lighthost-qemu-firmware"],
+      "programs": []
+    }
+  }
+}
+

@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/istoreos/lighthost-packages/release/schema/component-release.schema.json",
+  "title": "LightHost component release",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "component", "repository", "tag", "version", "source", "feed", "target", "assets"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "component": {"enum": ["lighthost", "lighthost-ui", "lighthost-spice-console", "incus", "lighthost-qemu-firmware"]},
+    "repository": {"const": "istoreos/lighthost-packages"},
+    "tag": {"type": "string", "minLength": 3},
+    "version": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["componentVersion", "packageVersion", "packageRelease"],
+      "properties": {
+        "componentVersion": {"type": "string", "minLength": 1},
+        "packageVersion": {"type": "string", "minLength": 1},
+        "packageRelease": {"type": "string", "pattern": "^[0-9]+(?:\\.[0-9]+)?$"},
+        "programVersion": {"type": "string", "minLength": 1}
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "commit", "state", "paths"],
+      "properties": {
+        "repository": {"type": "string", "minLength": 3},
+        "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "state": {"const": "COMMITTED"},
+        "paths": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "feed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["commit", "paths"],
+      "properties": {
+        "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "paths": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["architecture", "libc", "platform"],
+      "properties": {
+        "architecture": {"type": "string", "minLength": 1},
+        "libc": {"type": "string", "minLength": 1},
+        "platform": {"type": "string", "minLength": 1}
+      }
+    },
+    "assets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "role", "size", "sha256"],
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "role": {"enum": ["build-input", "package", "source-offer", "build-info", "checksums", "license", "sbom"]},
+          "size": {"type": "integer", "minimum": 1},
+          "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        }
+      }
+    }
+  }
+}
+

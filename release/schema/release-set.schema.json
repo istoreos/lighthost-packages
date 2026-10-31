@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/istoreos/lighthost-packages/release/schema/release-set.schema.json",
+  "title": "Qualified LightHost release set",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "releaseSet", "target", "components", "qualification"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "releaseSet": {"type": "string", "minLength": 1},
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["architecture", "libc", "platform"],
+      "properties": {
+        "architecture": {"type": "string", "minLength": 1},
+        "libc": {"type": "string", "minLength": 1},
+        "platform": {"type": "string", "minLength": 1}
+      }
+    },
+    "components": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lighthost", "lighthost-ui", "lighthost-spice-console", "incus", "lighthost-qemu-firmware"],
+      "properties": {
+        "lighthost": {"$ref": "#/$defs/component"},
+        "lighthost-ui": {"$ref": "#/$defs/component"},
+        "lighthost-spice-console": {"$ref": "#/$defs/component"},
+        "incus": {"$ref": "#/$defs/component"},
+        "lighthost-qemu-firmware": {"$ref": "#/$defs/component"}
+      }
+    },
+    "qualification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "evidence"],
+      "properties": {
+        "state": {"enum": ["NOT_RUN", "PRERELEASE_PASS", "STABLE_PASS"]},
+        "evidence": {"type": "array", "items": {"type": "string", "minLength": 1}}
+      }
+    }
+  },
+  "$defs": {
+    "component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tag", "manifestSha256"],
+      "properties": {
+        "tag": {"type": "string", "minLength": 3},
+        "manifestSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    }
+  }
+}
+
