@@ -113,6 +113,24 @@ class ComponentReleaseTests(unittest.TestCase):
         ))
         self.assertEqual(result["components"], ["incus"])
 
+    def test_incus_product_patch_affects_only_incus(self):
+        result = release.plan(argparse.Namespace(
+            definitions=ROOT / "release/model/components.json",
+            source_repository="linkease/linkease-lighthost",
+            source_changed=["openwrt-feed/incus/patches/030-lighthost-stopped-platform-digest.patch"],
+            feed_changed=[],
+        ))
+        self.assertEqual(result["components"], ["incus"])
+
+    def test_firmware_input_affects_only_firmware(self):
+        result = release.plan(argparse.Namespace(
+            definitions=ROOT / "release/model/components.json",
+            source_repository="linkease/linkease-lighthost",
+            source_changed=["openwrt-feed/qemu-firmware/files/windows-vars-source.json"],
+            feed_changed=[],
+        ))
+        self.assertEqual(result["components"], ["lighthost-qemu-firmware"])
+
     def test_core_change_does_not_affect_ui(self):
         result = release.plan(argparse.Namespace(
             definitions=ROOT / "release/model/components.json",

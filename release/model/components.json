@@ -28,16 +28,16 @@
     },
     "incus": {
       "tagPrefix": "incus-v",
-      "sourceRepository": "lxc/incus",
-      "sourcePaths": ["."],
+      "sourceRepository": "linkease/linkease-lighthost",
+      "sourcePaths": ["openwrt-feed/incus"],
       "feedPaths": ["incus"],
       "packages": ["incus", "incus-agent"],
       "programs": ["incus", "incusd", "incus-agent"]
     },
     "lighthost-qemu-firmware": {
       "tagPrefix": "lighthost-qemu-firmware-v",
-      "sourceRepository": "qemu/qemu",
-      "sourcePaths": ["pc-bios"],
+      "sourceRepository": "linkease/linkease-lighthost",
+      "sourcePaths": ["openwrt-feed/qemu-firmware"],
       "feedPaths": ["qemu-firmware"],
       "packages": ["lighthost-qemu-firmware"],
       "programs": []

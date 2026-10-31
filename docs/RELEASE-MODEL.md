@@ -69,6 +69,14 @@ paths. Worktree-only snapshots are rejected. A manifest binds both the product
 source commit and the feed commit, so a change to either program code or
 packaging code is visible.
 
+For patched third-party components, the source identity is the committed
+LightHost integration directory that owns the recipe, patch set and upstream
+lock. The upstream repository and revision remain immutable inputs recorded in
+that lock and in the attached source offer; they are not a second release tag
+identity. This keeps change planning unambiguous: changing
+`openwrt-feed/incus/` selects only `incus`, and changing
+`openwrt-feed/qemu-firmware/` selects only `lighthost-qemu-firmware`.
+
 ## Legacy migration
 
 `release/model/legacy-istorework-packages-20261014.json` inventories all 15
