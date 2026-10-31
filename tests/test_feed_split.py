@@ -81,9 +81,9 @@ class FeedSplitTests(unittest.TestCase):
                 "65662e0d5f8064e4bee5cfe85938b67a26a9cf78b8e7919606055c84f561d698",
             ),
             "lighthost-ui/Makefile": (
-                "lighthost-ui-v0.3.0-r87.1",
-                "lighthost-ui-$(PKG_VERSION)-r87.1-x86_64.tar.gz",
-                "587c27007bf372d6d2c5ae862dd60cba5124823e8e61d9f94af773c247bfb00c",
+                "lighthost-ui-v0.3.0-r87.2",
+                "lighthost-ui-$(PKG_VERSION)-r87.2-x86_64.tar.gz",
+                "0b7243702f7dc52e40e01b994702c8e4964294440cef39eb6b2ff5e110b5f692",
             ),
             "lighthost-spice-console/Makefile": (
                 "lighthost-spice-console-v0.3.0-r87",
