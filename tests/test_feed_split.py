@@ -76,9 +76,9 @@ class FeedSplitTests(unittest.TestCase):
     def test_component_inputs_use_exact_public_release_tags(self):
         expected = {
             "lighthost/Makefile": (
-                "lighthost-v0.3.0-r87",
-                "lighthost-$(PKG_VERSION)-r87-x86_64.tar.gz",
-                "d7109a24e98dc92441566c828d2c2ed5c1b82738e178098d3a0a1a98003cbc00",
+                "lighthost-v0.3.0-r88",
+                "lighthost-$(PKG_VERSION)-r88-x86_64.tar.gz",
+                "65662e0d5f8064e4bee5cfe85938b67a26a9cf78b8e7919606055c84f561d698",
             ),
             "lighthost-ui/Makefile": (
                 "lighthost-ui-v0.3.0-r87.1",

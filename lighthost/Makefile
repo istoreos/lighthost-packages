@@ -2,10 +2,10 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=lighthost
 PKG_VERSION:=0.3.0
-PKG_RELEASE:=87
-PKG_SOURCE:=lighthost-$(PKG_VERSION)-r87-x86_64.tar.gz
-PKG_SOURCE_URL:=https://github.com/istoreos/lighthost-packages/releases/download/lighthost-v0.3.0-r87/
-PKG_HASH:=d7109a24e98dc92441566c828d2c2ed5c1b82738e178098d3a0a1a98003cbc00
+PKG_RELEASE:=88
+PKG_SOURCE:=lighthost-$(PKG_VERSION)-r88-x86_64.tar.gz
+PKG_SOURCE_URL:=https://github.com/istoreos/lighthost-packages/releases/download/lighthost-v0.3.0-r88/
+PKG_HASH:=65662e0d5f8064e4bee5cfe85938b67a26a9cf78b8e7919606055c84f561d698
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 PKG_MAINTAINER:=LinkEase <support@linkease.com>
 PKG_LICENSE:=UNLICENSED
