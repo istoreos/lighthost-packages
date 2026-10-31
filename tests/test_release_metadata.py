@@ -89,6 +89,12 @@ class ReleaseSetTests(unittest.TestCase):
         with self.assertRaisesRegex(validator.InvalidMetadata, "five"):
             validator.validate_release_set(self.value)
 
+    def test_repository_release_sets_are_valid(self):
+        paths = sorted((ROOT / "release/sets").glob("*.json"))
+        self.assertTrue(paths)
+        for path in paths:
+            validator.validate_release_set(json.loads(path.read_text()))
+
 
 class LegacyInventoryTests(unittest.TestCase):
     def test_inventory_is_complete_and_unique(self):

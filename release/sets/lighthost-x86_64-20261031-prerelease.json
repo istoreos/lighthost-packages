@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "releaseSet": "lighthost-x86_64-20261031-prerelease",
+  "target": {
+    "architecture": "x86_64",
+    "libc": "musl",
+    "platform": "istoreos-24.10"
+  },
+  "components": {
+    "lighthost": {
+      "tag": "lighthost-v0.3.0-r88",
+      "manifestSha256": "df9f72084c90d4b173510a36a65e893f3cd7fc25ed6074e8c5e8ec1f578ccfbd"
+    },
+    "lighthost-ui": {
+      "tag": "lighthost-ui-v0.3.0-r87.2",
+      "manifestSha256": "1cb7a0a5f1319deb1cba5d318f1e6445fc129a8d866f6a792389245392f18fa2"
+    },
+    "lighthost-spice-console": {
+      "tag": "lighthost-spice-console-v0.3.0-r87",
+      "manifestSha256": "bc2fd20aa4a06aac612401762534b55ad4664fc923837ae466e27e777f7fef95"
+    },
+    "incus": {
+      "tag": "incus-v6.0.6-lighthost.3-r3",
+      "manifestSha256": "4a80facf480a8ee27f2e0aae063549ed5121266a261e83fd2f01fe525526b6cb"
+    },
+    "lighthost-qemu-firmware": {
+      "tag": "lighthost-qemu-firmware-v202302-r2",
+      "manifestSha256": "225dd5f6503d791e0498181208d02a26b0919f4fcef77735527a5120d0d4526d"
+    }
+  },
+  "qualification": {
+    "state": "PRERELEASE_PASS",
+    "evidence": [
+      "docs/COMPONENT-RELEASE-20261031.md",
+      "/builders/projects/lighthost/work/public-component-consumer-20261031",
+      "root@192.168.9.195:/mnt/lighthost-data/lighthost/operations/component-release-20261031/evidence"
+    ]
+  }
+}
