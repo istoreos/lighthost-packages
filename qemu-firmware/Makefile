@@ -2,10 +2,10 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=lighthost-qemu-firmware
 PKG_VERSION:=202302
-PKG_RELEASE:=3
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-public-20261014-x86_64.tar.gz
-PKG_SOURCE_URL:=https://github.com/istoreos/istorework-packages/releases/download/lighthost-public-build-inputs-20261014/
-PKG_HASH:=49b8b0b86ac64817385eb50eb259f5005bb48559b05faf4d9b53a0012075d655
+PKG_RELEASE:=2
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-r2-x86_64.tar.gz
+PKG_SOURCE_URL:=https://github.com/istoreos/lighthost-packages/releases/download/lighthost-qemu-firmware-v202302-r2/
+PKG_HASH:=2f4ae7144fa1610bcd3655b4704532088c783bf9910601438a6d929be066dd47
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 PKG_MAINTAINER:=LinkEase <support@linkease.com>
 PKG_LICENSE:=BSD-2-Clause-Patent BSD-2-Clause OpenSSL

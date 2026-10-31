@@ -2,11 +2,11 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=incus
 PKG_VERSION:=6.0.6
-PKG_RELEASE:=7
+PKG_RELEASE:=3
 
-PKG_SOURCE:=incus-$(PKG_VERSION)-public-20261014-x86_64.tar.gz
-PKG_SOURCE_URL:=https://github.com/istoreos/istorework-packages/releases/download/lighthost-public-build-inputs-20261014/
-PKG_HASH:=59226bbf8c001181d71d4dac76690f36b5368bb366e3826688f93f0953f5eba0
+PKG_SOURCE:=incus-$(PKG_VERSION)-lighthost.3-r3-x86_64.tar.gz
+PKG_SOURCE_URL:=https://github.com/istoreos/lighthost-packages/releases/download/incus-v6.0.6-lighthost.3-r3/
+PKG_HASH:=3dcb9c140d31f601c5f7ca89ade7659cdd8b028355658a03dc1b8d6e7b00bbc8
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 
 PKG_MAINTAINER:=LinkEase <support@linkease.com>

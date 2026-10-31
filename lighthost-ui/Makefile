@@ -2,13 +2,11 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=lighthost-ui
 PKG_VERSION:=0.3.0
-PKG_RELEASE:=82
-# M1 preserves the historical combined input. M3 replaces it with a
-# component-only archive without changing the installed payload.
-PKG_SOURCE:=lighthost-$(PKG_VERSION)-r82-65cf9c4d8171-x86_64.tar.gz
-PKG_SOURCE_URL:=https://github.com/istoreos/istorework-packages/releases/download/lighthost-public-build-inputs-20261014/
-PKG_HASH:=b1521a479326e9f442156972fe0a2d53a21edc862b2b27b50bcc1cc419491975
-PKG_BUILD_DIR:=$(BUILD_DIR)/lighthost-$(PKG_VERSION)
+PKG_RELEASE:=87.1
+PKG_SOURCE:=lighthost-ui-$(PKG_VERSION)-r87.1-x86_64.tar.gz
+PKG_SOURCE_URL:=https://github.com/istoreos/lighthost-packages/releases/download/lighthost-ui-v0.3.0-r87.1/
+PKG_HASH:=587c27007bf372d6d2c5ae862dd60cba5124823e8e61d9f94af773c247bfb00c
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 PKG_MAINTAINER:=LinkEase <support@linkease.com>
 PKG_LICENSE:=UNLICENSED
 
