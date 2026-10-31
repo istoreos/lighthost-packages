@@ -165,8 +165,9 @@ def assemble(args: argparse.Namespace) -> dict:
             entries[target] = primary[source]
         entries.update(select_prefix(primary, "usr/share/lighthost/licenses/", "licenses/"))
     elif args.component == "lighthost-ui":
-        prefix = "lighthost-ui-0.3.0"
-        archive_name = "lighthost-ui-0.3.0-r87.1-x86_64.tar.gz"
+        component_version = args.package_version.rsplit("-r", 1)[0]
+        prefix = f"lighthost-ui-{component_version}"
+        archive_name = f"lighthost-ui-{args.package_version}-x86_64.tar.gz"
         entries.update(select_prefix(primary, "usr/share/lighthost/www/", "frontend-dist/", exclude={"logo.svg"}))
     elif args.component == "lighthost-spice-console":
         prefix = "lighthost-spice-console-0.3.0"
