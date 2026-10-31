@@ -96,8 +96,6 @@ define Package/lighthost/install
 	$(INSTALL_DATA) ./files/lighthost-ubus-acl.json $(1)/usr/share/acl.d/lighthost.json
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/release/images.x86_64-2410.lock.tsv $(1)/usr/share/lighthost/images.x86_64-2410.lock.tsv
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/release/vm-media-sources.x86_64-2410.lock.tsv $(1)/usr/share/lighthost/vm-media-sources.x86_64-2410.lock.tsv
-	$(INSTALL_DIR) $(1)/usr/share/licenses/lighthost
-	$(CP) $(PKG_BUILD_DIR)/licenses/. $(1)/usr/share/licenses/lighthost/
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/BUILD-INFO.json $(1)/usr/share/lighthost/build-info.json
 	printf '%s\n' '$(PKG_VERSION)-r$(PKG_RELEASE)' > $(1)/usr/share/lighthost/release
 endef
