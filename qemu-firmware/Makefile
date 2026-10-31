@@ -40,9 +40,9 @@ define Package/lighthost-qemu-firmware/install
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/edk2-x86_64-code.fd $(1)/usr/share/qemu/
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/edk2-x86_64-secure-code.fd $(1)/usr/share/qemu/
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/edk2-i386-vars.fd $(1)/usr/share/qemu/
-	$(INSTALL_DATA) $(PKG_BUILD_DIR)/edk2-licenses.txt $(1)/usr/share/licenses/lighthost-qemu-firmware/
-	$(INSTALL_DATA) $(PKG_BUILD_DIR)/Microsoft-License.txt $(1)/usr/share/licenses/lighthost-qemu-firmware/
-	$(INSTALL_DATA) $(PKG_BUILD_DIR)/windows-vars-source.json $(1)/usr/share/licenses/lighthost-qemu-firmware/
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/licenses/edk2-licenses.txt $(1)/usr/share/licenses/lighthost-qemu-firmware/
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/licenses/Microsoft-License.txt $(1)/usr/share/licenses/lighthost-qemu-firmware/
+	$(INSTALL_DATA) $(PKG_BUILD_DIR)/licenses/windows-vars-source.json $(1)/usr/share/licenses/lighthost-qemu-firmware/
 endef
 
 $(eval $(call BuildPackage,lighthost-qemu-firmware))
