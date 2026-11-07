@@ -17,17 +17,17 @@ define Package/lighthost-ui
   CATEGORY:=Administration
   TITLE:=LightHost LinkEase Desktop interface
   URL:=https://github.com/linkease/linkease-lighthost
-  DEPENDS:=+lighthost +lighthost-spice-console +linkeasefull
+  DEPENDS:=+lighthost +lighthost-spice-console +linkease-app-entry
 endef
 
 define Package/lighthost-ui/description
- React interface and LinkEaseFull plugin manifest for the LightHost control plane.
+ React interface and LinkEaseAppEntry plugin manifest for the LightHost control plane.
 endef
 
 define Package/lighthost-ui/prerm
 #!/bin/sh
 if [ -z "$${IPKG_INSTROOT}" ]; then
-	link=/usr/share/linkeasefull/desktop-apps.d/25-lighthost-plugin.json
+	link=/usr/share/lighthost/desktop-apps.d/25-lighthost-plugin.json
 	[ "$$(readlink "$${link}" 2>/dev/null)" != "/usr/share/lighthost/lighthost-plugin.json" ] || rm -f "$${link}"
 fi
 exit 0
@@ -43,12 +43,12 @@ endef
 
 define Package/lighthost-ui/install
 	$(INSTALL_DIR) $(1)/usr/share/lighthost/www \
-		$(1)/usr/share/linkeasefull/desktop-apps.d
+		$(1)/usr/share/lighthost/desktop-apps.d
 	$(CP) $(PKG_BUILD_DIR)/frontend-dist/. $(1)/usr/share/lighthost/www/
 	$(INSTALL_DATA) ./files/logo.svg $(1)/usr/share/lighthost/www/logo.svg
 	$(INSTALL_DATA) ./files/lighthost-plugin.json $(1)/usr/share/lighthost/lighthost-plugin.json
 	ln -sf /usr/share/lighthost/lighthost-plugin.json \
-		$(1)/usr/share/linkeasefull/desktop-apps.d/25-lighthost-plugin.json
+		$(1)/usr/share/lighthost/desktop-apps.d/25-lighthost-plugin.json
 	find $(1) -type d -exec chmod g-s {} +
 endef
 
