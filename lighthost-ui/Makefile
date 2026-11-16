@@ -17,7 +17,7 @@ define Package/lighthost-ui
   CATEGORY:=Administration
   TITLE:=LightHost LinkEase Desktop interface
   URL:=https://github.com/linkease/linkease-lighthost
-  DEPENDS:=+lighthost +lighthost-spice-console +linkeasefull
+  DEPENDS:=+lighthost +lighthost-spice-console +linkease-app-entry
 endef
 
 define Package/lighthost-ui/description
